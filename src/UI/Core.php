@@ -60,8 +60,8 @@ class Core
 
         // set $componentState
         $componentState = static::$state[$component->key];
-        $parsedComponent = preg_replace('/<(\w+)([^>]*)>/i', "<$1 ui-state='" . json_encode($componentState) . "' $2>", Parser::compileTemplate($component->render(), $componentState), 1);
-
+        // insert ui-state attribute to html element
+        $parsedComponent = static::insertStateAttribute($component, $componentState);
 
         return [
             'responseType' => 'html',
@@ -137,19 +137,26 @@ class Core
 
         $componentState = static::$state[$componentCalled->key];
 
-        return [
+        // insert ui-state attribute to html element
+        $parsedComponent = static::insertStateAttribute($component, $componentState);
+
+
+        //    return [
+        $response = [
             'responseType' => 'json',
             'html' => $withoutScripts ?
-                preg_replace('/<(\w+)([^>]*)>/i', "<$1 ui-state='" . json_encode($componentState) . "' $2>", Parser::compileTemplate($component->render(), $componentState), 1) :
+                $parsedComponent :
                 str_replace(
                     '</body>',
                     UI::createElement('script', [], ['
                             window._leafUIConfig.methods = ' . json_encode(array_unique(static::$componentMethods)) . ';
                             window._leafUIConfig.components = ' . json_encode(static::$components) . ';
                         ']) . UI::init() . '</body>',
-                    preg_replace('/<(\w+)([^>]*)>/i', "<$1 ui-state='" . json_encode($componentState) . "' $2>", Parser::compileTemplate($component->render(), $componentState), 1)
+                    $parsedComponent
                 ),
         ];
+
+        return $response;
     }
 
     /**
@@ -195,20 +202,22 @@ class Core
             }
         }
 
+        // set component key to latest component key overwriting new component key 
         $component->key = $config['payload']['component'];
-        static::$state[$config['payload']['component']]['key'] = $config['payload']['component'];
+
+        $parsedComponent = static::insertStateAttribute($component, static::$state[$config['payload']['component']]);
 
         return [
             'responseType' => 'json',
             'html' => $withoutScripts ?
-                preg_replace('/<(\w+)([^>]*)>/i', "<$1 ui-state='" . json_encode(static::$state[$config['payload']['component']]) . "' $2>", Parser::compileTemplate($component->render(), static::$state[$config['payload']['component']]), 1) :
+                $parsedComponent :
                 str_replace(
                     '</body>',
                     UI::createElement('script', [], ['
                                 window._leafUIConfig.methods = ' . json_encode(array_unique(static::$componentMethods)) . ';
                                 window._leafUIConfig.components = ' . json_encode(static::$components) . ';
                             ']) . UI::init() . '</body>',
-                    preg_replace('/<(\w+)([^>]*)>/i', "<$1 ui-state='" . json_encode(static::$state[$config['payload']['component']]) . "' $2>", Parser::compileTemplate($component->render(), static::$state[$config['payload']['component']]), 1)
+                    $parsedComponent
                 ),
         ];
     }
@@ -222,5 +231,16 @@ class Core
         }
 
         return array_merge($state, $extraState);
+    }
+
+    public static function insertStateAttribute($component, $componentState): string
+    {
+        // insert ui-state attribute to html element
+        return preg_replace(
+            '/<(\w+)([^>]*)>/i',
+            "<$1 ui-state='" . json_encode($componentState) . "' $2>",
+            $component->render($componentState),
+            1
+        );
     }
 }
