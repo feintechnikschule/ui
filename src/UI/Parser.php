@@ -96,7 +96,7 @@ class Parser
 
             preg_match('/@if\((.*?)\)/', $compiledWithParsedConditions, $condition);
 
-            if (eval("return $condition[1];") === true) {
+            if (eval("return $condition[1];") == true) {  // "===" is too strong 
                 preg_match(
                     '/@if\([\s\S]*?\)\s*[\s\S]*?(?:\s*@elseif\([\s\S]*?\)\s*[\s\S]*?|\s*@else\s*[\s\S]*?|\s*@endif\s*)/',
                     $compiledWithParsedConditions,
@@ -106,11 +106,12 @@ class Parser
                 $renderedData = preg_replace('/@if\([\s\S]*?\)\s*[\s\S]*?/', '', $ifConditionMatches[0]);
                 $renderedData = preg_replace('/\s*@elseif\([\s\S]*?\)\s*[\s\S]*?/', '', $renderedData);
                 $renderedData = preg_replace('/\s*@else\s*[\s\S]*?/', '', $renderedData);
+                $renderedData = preg_replace('/\s*@endif\s*[\s\S]*?/', '', $renderedData);      // skip @endif
             } else {
-                if (strpos($compiledWithParsedConditions, '@elseif') !== false) {
+                if (strpos($compiledWithParsedConditions, '@elseif') != false) {
                     preg_match('/@elseif\((.*?)\)/', $compiledWithParsedConditions, $elseifCondition);
 
-                    if (eval("return $elseifCondition[1];") === true) {
+                    if (eval("return $elseifCondition[1];") == true) {  // "===" is too strong 
                         preg_match(
                             '/@elseif\([\s\S]*?\)\s*[\s\S]*?(?:\s*@elseif\([\s\S]*?\)\s*[\s\S]*?|\s*@else\s*[\s\S]*?|\s*@endif\s*)/',
                             $compiledWithParsedConditions,
@@ -119,12 +120,12 @@ class Parser
 
                         $renderedData = preg_replace('/@elseif\([\s\S]*?\)\s*[\s\S]*?/', '', $elseifConditionMatches[0]);
                         $renderedData = preg_replace('/\s*@else\s*[\s\S]*?/', '', $renderedData);
-                    } else if (strpos($compiledWithParsedConditions, '@else') !== false) {
+                    } else if (strpos($compiledWithParsedConditions, '@else') != false) {  // "!==" is too strong 
                         preg_match('/@else\s*(.*?)\s*@endif/', $compiledWithParsedConditions, $elseConditionMatches);
                         $renderedData = $elseConditionMatches[1];
                     }
                 } else {
-                    if (strpos($compiledWithParsedConditions, '@else') !== false) {
+                    if (strpos($compiledWithParsedConditions, '@else') != false) {  // "!==" is too strong 
                         preg_match('/@else\s*(.*?)\s*@endif/', $compiledWithParsedConditions, $elseConditionMatches);
                         $renderedData = $elseConditionMatches[1];
                     }
