@@ -180,12 +180,11 @@ class Core
                     $methodToCall = [$component, $config['payload']['method']];
 
                     // set the state for the component
-                    foreach ($config['payload']['data'] as $key => $value) {
+                    foreach ($config['payload']['data'][$config['payload']['component']] as $key => $value) {
                         if (property_exists($component, $key)) {
                             $component->{$key} = $value;
                         }
                     }
-
                     break;
                 }
             }
