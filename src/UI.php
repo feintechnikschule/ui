@@ -35,7 +35,7 @@ class UI
      * 
      * @param Component $component The Leaf UI component to render
      */
-    public static function render($component)
+    public static function render(Component $component)
     {
         $config = json_decode((new \Leaf\Http\Request())->get('_leaf_ui_config', false) ?? '', true) ?? [];
 
@@ -50,10 +50,6 @@ class UI
         if (isset($config['payload']['data'])) {
             Core::$state = array_merge(Core::$state, $config['payload']['data']);
         }
-
-        Core::$state[$component->key] = array_merge(get_class_vars($component::class), [
-            'key' => $component->key,
-        ]);
 
         Core::$componentMethods = array_merge(Core::$componentMethods, get_class_methods($component));
         Core::$mappedComponentMethods = array_merge(Core::$mappedComponentMethods, [$component->key => get_class_methods($component)]);
