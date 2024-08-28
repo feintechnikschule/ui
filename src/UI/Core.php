@@ -36,21 +36,32 @@ class Core
      */
     public static function buildComponent(Component $component, array $config, bool $withoutScripts = false)
     {
+        // if userState from get async
         if (is_string($config['type'] ?? null)) {
             // called for async requests and compiling of components
             return static::buildComponentAsync($component, $config, $withoutScripts);
         }
+        
+        // set static::$state
+        static::$state[$component->key] = array_merge(
+            // init classState
+            get_class_vars($component::class),
+            ['key' => $component->key],
+            // merge databaseState
+            // merge userState, will be []
+            static::$state[$component->key] ?? []
+        );
 
+        // set $pageState
         $pageState = [];
-        static::$state[$component->key] = array_merge(static::$state[$component->key], get_class_vars($component::class), [
-            'key' => $component->key,
-        ]);
-        $componentState = static::$state[$component->key];
-        $parsedComponent = preg_replace('/<(\w+)([^>]*)>/i', "<$1 ui-state='" . json_encode($componentState) . "' $2>", Parser::compileTemplate($component->render(), $componentState), 1);
-
         foreach (array_values(static::$state) as $key => $value) {
             $pageState = array_merge($pageState, $value);
         }
+
+        // set $componentState
+        $componentState = static::$state[$component->key];
+        $parsedComponent = preg_replace('/<(\w+)([^>]*)>/i', "<$1 ui-state='" . json_encode($componentState) . "' $2>", Parser::compileTemplate($component->render(), $componentState), 1);
+
 
         return [
             'responseType' => 'html',

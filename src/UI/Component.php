@@ -39,6 +39,6 @@ abstract class Component
            "Value" => $newValue,
            "Created" => date(DATE_ATOM)
         ];
-        StateChanged::Add($newStateChanged);
+        //StateChanged::Add($newStateChanged);
     }
 }
