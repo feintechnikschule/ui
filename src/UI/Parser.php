@@ -149,8 +149,9 @@ class Parser
         }, $compiled);
 
         $compiled = preg_replace_callback('/@component\((.*?)\)/', function ($matches) {
-            $paramsArray = preg_split('/,\s*/', $matches[1]);
-            $props = preg_replace('/\s+/', '', $paramsArray[1] ?? '[]');
+            $paramsArray = preg_split('/,\s*/', $matches[1], 2);    // preg_split limit=2 
+            // keep blanks between alphanumeric i.e.
+            $props = preg_replace('/((?<![a-zA-Z0-9])\s+)|(\s+(?![a-zA-Z0-9]))/', '', $paramsArray[1] ?? '[]');
             return UI::component($paramsArray[0], eval("return $props;"));
         }, $compiled);
 
