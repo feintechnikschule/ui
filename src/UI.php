@@ -70,13 +70,16 @@ class UI
      * 
      * @throws \JsonException
      */
-    public static function view(string $filename): string
+    public static function view(string $filename, $state = []): string
     {
+        // get view
         if (!file_exists($filename)) {
             throw new \JsonException("$filename not found!");
         }
-
-        return Parser::compileTemplate(file_get_contents($filename), Core::mergeState());
+        // set default state
+        if ($state == []) $state = Core::mergeState();
+        // render view with state
+        return Parser::compileTemplate(file_get_contents($filename), $state);
     }
 
     /**
@@ -103,7 +106,15 @@ class UI
             $component->key = $props['key'];
         }
 
-        Core::$state[$component->key] = array_merge(get_class_vars($component::class), Core::$state[$component->key] ?? [], ['key' => $component->key], $props);
+        Core::$state[$component->key] = array_merge(
+            // init classState
+            get_class_vars($component::class),
+            ['key' => $component->key],
+            // merge templateState
+            $props,
+            // merge databaseState and userState if any
+            Core::$state[$component->key] ?? []
+        );
 
         foreach (Core::$state[$component->key] as $key => $value) {
             $component->{$key} = $value;
