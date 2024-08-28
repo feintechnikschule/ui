@@ -37,7 +37,21 @@ class UI
      */
     public static function render(Component $component)
     {
+        // get databaseState for all components if any
+        $dbState = $component->getDbState() ?? [];
+        // merge dbState to coreState
+        if (isset($dbState['data'])) {
+            $merge = array_merge(Core::$state, $dbState['data']);
+            Core::$state = $merge;
+        }
+
+        // get userState for all components
         $config = json_decode((new \Leaf\Http\Request())->get('_leaf_ui_config', false) ?? '', true) ?? [];
+
+        // merge userState to CoreState if any
+        if (isset($config['payload']['data'])) {
+            Core::$state = array_merge(Core::$state, $config['payload']['data']);
+        }
 
         if (!$component->key) {
             if (isset($config['component'])) {
@@ -45,10 +59,6 @@ class UI
             } else {
                 $component->key = Utils::randomId($component::class);
             }
-        }
-
-        if (isset($config['payload']['data'])) {
-            Core::$state = array_merge(Core::$state, $config['payload']['data']);
         }
 
         Core::$componentMethods = array_merge(Core::$componentMethods, get_class_methods($component));
