@@ -8,16 +8,20 @@ use MatthiasMullie\Minify\CSS;
 /**
  * This class handles the internal parsing of Leaf UI components
  */
-class Parser {
+class Parser
+{
     /**
      * Compile Leaf UI Template
      * @param string $rawText The template to compile
      */
     public static function compileTemplate(string $rawText, array $state = []): string
     {
+        // drop newline \n
+        $compiled = preg_replace('/\\n/', '', $rawText);
+
         $compiled = preg_replace_callback('/{{(.*?)}}/', function ($matches) use ($state) {
             return $state[ltrim(trim($matches[1]), '$')] ?? trigger_error($matches[1] . ' is not defined', E_USER_ERROR);
-        }, $rawText);
+        }, $compiled);
 
         $compiled = preg_replace_callback('/<style.*?>(.*?)<\/style>/is', function ($matches) {
             $newCSS = (new CSS())->add($matches[1])->minify();
