@@ -73,7 +73,7 @@ class Core
                         component: "' . $component::class . '",
                         components: ' . json_encode(static::$components) . ',
                         data: ' . json_encode(array_merge($pageState, ['key' => $component->key])) . ',
-                        methods: ' . json_encode(array_unique(static::$componentMethods)) . ',
+                        methods: ' . self::jsonEncodeToSimpleArray(array_unique(static::$componentMethods)) . ',
                         path: "' . $_SERVER['REQUEST_URI'] . '",
                         requestMethod: "' . $_SERVER['REQUEST_METHOD'] . '",
                     };
@@ -140,7 +140,6 @@ class Core
         // insert ui-state attribute to html element
         $parsedComponent = static::insertStateAttribute($component, $componentState);
 
-
         //    return [
         $response = [
             'responseType' => 'json',
@@ -149,7 +148,7 @@ class Core
                 str_replace(
                     '</body>',
                     UI::createElement('script', [], ['
-                            window._leafUIConfig.methods = ' . json_encode(array_unique(static::$componentMethods)) . ';
+                            window._leafUIConfig.methods = ' . self::jsonEncodeToSimpleArray(array_unique(static::$componentMethods)) . ';
                             window._leafUIConfig.components = ' . json_encode(static::$components) . ';
                         ']) . UI::init() . '</body>',
                     $parsedComponent
@@ -213,7 +212,7 @@ class Core
                 str_replace(
                     '</body>',
                     UI::createElement('script', [], ['
-                                window._leafUIConfig.methods = ' . json_encode(array_unique(static::$componentMethods)) . ';
+                                window._leafUIConfig.methods = ' . self::jsonEncodeToSimpleArray(array_unique(static::$componentMethods)) . ';
                                 window._leafUIConfig.components = ' . json_encode(static::$components) . ';
                             ']) . UI::init() . '</body>',
                     $parsedComponent
@@ -232,7 +231,7 @@ class Core
         return array_merge($state, $extraState);
     }
 
-    public static function insertStateAttribute($component, $componentState): string
+    private static function insertStateAttribute($component, $componentState): string
     {
         // insert ui-state attribute to html element
         return preg_replace(
@@ -241,5 +240,14 @@ class Core
             $component->render($componentState),
             1
         );
+    }
+
+    private static function jsonEncodeToSimpleArray($arr): string {
+        $simple = array();
+        foreach($arr as $key => $value){
+            $simple[] = $value;
+        }
+        $json = json_encode(($simple));
+        return $json;
     }
 }
